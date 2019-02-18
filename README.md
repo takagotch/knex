@@ -532,6 +532,35 @@ knex.schema.queryContext('schema context')
     table.string('first_name').queryContext('first_name context');
     table.string('last_name').queryContext('last_name context');
   })
+  
+var Promise = require('bluebird');
+
+knex.transaction(function(trx) {
+
+  var books = [
+    {title: 'Canterbury Tales'},
+    {title: 'Moby Dick'},
+    {title: 'Hamlet'}
+  ];
+  
+  return trx
+    .insert({name: 'Old Books'}, 'id')
+    .into('catalogues')
+    .then(function(ids) {
+      return Promise.map(books, function(book) {
+        book.catalogue_id = ids[0];
+        
+        return trx.insert(book).into('books');
+      });
+    });
+})
+.then(function(inserts) {
+  console.log(inserts.length = ' new books saved.');
+})
+.catch(function(error){
+  console.error(error);
+});
+
 ```
 
 
